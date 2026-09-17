@@ -1,0 +1,29 @@
+{
+  "manifest_version": "1.0",
+  "assets": [
+    {
+      "canonical_record_id": "VINMERGE_COMPONENT_EXAMPLE_001",
+      "asset_id": "VIS-EXAMPLE-001",
+      "asset_type": "actual_product",
+      "role": "purchase_confidence",
+      "source": {
+        "type": "dealer",
+        "name": "Example Dealer",
+        "source_reference": "dealer-upload-001",
+        "license": "dealer-owned-upload",
+        "license_status": "permitted"
+      },
+      "status": "pending_review",
+      "file_path": null,
+      "url": null,
+      "thumbnail_url": null,
+      "original_image_ref": "dealer-upload-001",
+      "storage_key": null,
+      "mime_type": "image/jpeg",
+      "file_size_bytes": null,
+      "dimensions": null,
+      "visual_tags": ["example"],
+      "notes": "Example only; replace canonical_record_id and image references."
+    }
+  ]
+}
