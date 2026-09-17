@@ -2,131 +2,66 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://vinmerge.africa/schema/vinmerge-visual-intelligence.schema.json",
   "title": "VINMERGE Visual Intelligence Layer",
-  "description": "Hybrid visual architecture for technical diagrams, real product photography, installation/context imagery and AI-assisted visual metadata. Visual data enriches the identifier master but does not override authoritative vehicle or fitment relationships.",
+  "description": "Hybrid visual evidence layer. It enriches canonical VINMERGE records and never overrides authoritative identifier or fitment data.",
   "type": "object",
   "additionalProperties": false,
   "required": ["visual_layer_version", "visual_assets", "ai_visual_metadata"],
   "properties": {
-    "visual_layer_version": {
-      "type": "string",
-      "const": "1.0"
-    },
-    "visual_assets": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/visualAsset"
-      }
-    },
-    "ai_visual_metadata": {
-      "$ref": "#/$defs/aiVisualMetadata"
-    }
+    "visual_layer_version": { "type": "string", "const": "1.0" },
+    "visual_assets": { "type": "array", "items": { "$ref": "#/$defs/visualAsset" } },
+    "ai_visual_metadata": { "$ref": "#/$defs/aiVisualMetadata" }
   },
   "$defs": {
     "visualAsset": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["asset_id", "asset_type", "role", "source", "status"],
+      "required": ["asset_id", "asset_type", "role", "source", "status", "url", "thumbnail_url", "image_hash", "original_image_ref", "storage_key", "mime_type", "file_size_bytes", "dimensions", "visual_tags", "notes"],
       "properties": {
-        "asset_id": { "type": "string" },
-        "asset_type": {
-          "type": "string",
-          "enum": [
-            "exploded_diagram",
-            "technical_illustration",
-            "actual_product",
-            "installation_context",
-            "packaging",
-            "vehicle_context",
-            "reference_image"
-          ]
-        },
-        "role": {
-          "type": "string",
-          "enum": [
-            "identification",
-            "navigation",
-            "purchase_confidence",
-            "installation_guidance",
-            "packaging_verification",
-            "vehicle_context",
-            "reference"
-          ]
-        },
-        "url": { "type": ["string", "null"], "format": "uri" },
-        "thumbnail_url": { "type": ["string", "null"], "format": "uri" },
+        "asset_id": { "type": "string", "minLength": 1 },
+        "asset_type": { "type": "string", "enum": ["exploded_diagram", "technical_illustration", "actual_product", "installation_context", "packaging", "vehicle_context", "reference_image"] },
+        "role": { "type": "string", "enum": ["identification", "navigation", "purchase_confidence", "installation_guidance", "packaging_verification", "vehicle_context", "reference"] },
+        "url": { "type": ["string", "null"], "format": "uri-reference" },
+        "thumbnail_url": { "type": ["string", "null"], "format": "uri-reference" },
         "source": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["type"],
+          "required": ["type", "name", "source_reference", "license", "license_status"],
           "properties": {
-            "type": {
-              "type": "string",
-              "enum": [
-                "oem_public",
-                "supplier",
-                "dealer",
-                "user_upload",
-                "licensed_catalogue",
-                "ai_generated",
-                "other"
-              ]
-            },
+            "type": { "type": "string", "enum": ["oem_public", "supplier", "dealer", "user_upload", "licensed_catalogue", "ai_generated", "other"] },
             "name": { "type": ["string", "null"] },
             "source_reference": { "type": ["string", "null"] },
-            "license": { "type": ["string", "null"] }
+            "license": { "type": ["string", "null"] },
+            "license_status": { "type": "string", "enum": ["unknown", "pending", "permitted", "restricted", "rejected"] }
           }
         },
-        "status": {
-          "type": "string",
-          "enum": ["pending_review", "verified", "rejected", "archived"]
-        },
-        "image_hash": { "type": ["string", "null"] },
+        "status": { "type": "string", "enum": ["pending_review", "verified", "rejected", "archived"] },
+        "image_hash": { "type": ["string", "null"], "pattern": "^[A-Fa-f0-9]{64}$" },
+        "original_image_ref": { "type": ["string", "null"] },
+        "storage_key": { "type": ["string", "null"] },
+        "mime_type": { "type": ["string", "null"] },
+        "file_size_bytes": { "type": ["integer", "null"], "minimum": 0 },
         "dimensions": {
           "type": ["object", "null"],
           "additionalProperties": false,
-          "properties": {
-            "width": { "type": "integer", "minimum": 1 },
-            "height": { "type": "integer", "minimum": 1 }
-          }
+          "required": ["width", "height"],
+          "properties": { "width": { "type": "integer", "minimum": 1 }, "height": { "type": "integer", "minimum": 1 } }
         },
-        "visual_tags": {
-          "type": "array",
-          "items": { "type": "string" }
-        },
+        "visual_tags": { "type": "array", "items": { "type": "string" } },
         "notes": { "type": ["string", "null"] }
       }
     },
     "aiVisualMetadata": {
       "type": "object",
       "additionalProperties": false,
+      "required": ["enabled", "visual_embedding_ref", "detected_part_labels", "detected_attributes", "duplicate_group_id", "normalization_status", "fitment_signal", "human_review_required"],
       "properties": {
         "enabled": { "type": "boolean" },
         "visual_embedding_ref": { "type": ["string", "null"] },
-        "detected_part_labels": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": ["label", "confidence"],
-            "properties": {
-              "label": { "type": "string" },
-              "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
-            }
-          }
-        },
-        "detected_attributes": {
-          "type": "array",
-          "items": { "type": "string" }
-        },
+        "detected_part_labels": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["label", "confidence"], "properties": { "label": { "type": "string" }, "confidence": { "type": "number", "minimum": 0, "maximum": 1 } } } },
+        "detected_attributes": { "type": "array", "items": { "type": "string" } },
         "duplicate_group_id": { "type": ["string", "null"] },
-        "normalization_status": {
-          "type": "string",
-          "enum": ["not_processed", "processed", "needs_review"]
-        },
-        "fitment_signal": {
-          "type": "string",
-          "enum": ["none", "supporting_only", "review_required"]
-        },
+        "normalization_status": { "type": "string", "enum": ["not_processed", "processed", "needs_review"] },
+        "fitment_signal": { "type": "string", "enum": ["none", "supporting_only", "review_required"] },
         "human_review_required": { "type": "boolean" }
       }
     }
