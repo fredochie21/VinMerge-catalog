@@ -1,0 +1,30 @@
+{
+  "contract_version": "1.0",
+  "purpose": "Defines the AI enrichment boundary for VINMERGE visual assets without allowing AI to establish authoritative fitment or vehicle identity.",
+  "input": {
+    "asset_id": "string",
+    "canonical_record_id": "string",
+    "image_hash": "string|null",
+    "image_reference": "string",
+    "status": "pending_review"
+  },
+  "allowed_outputs": {
+    "detected_part_labels": "candidate labels with confidence",
+    "detected_attributes": "candidate visual attributes with confidence",
+    "visual_tags": "search-oriented tags",
+    "normalization_status": "processing status",
+    "duplicate_group_id": "candidate duplicate grouping",
+    "human_review_required": "boolean",
+    "quality_flags": "image-quality observations"
+  },
+  "prohibited_authoritative_outputs": [
+    "VIN identity",
+    "chassis/frame identity",
+    "exact vehicle configuration",
+    "OEM fitment",
+    "interchangeability",
+    "supplier stock truth",
+    "final approval of an asset"
+  ],
+  "review_rule": "AI output is advisory metadata only. Authoritative catalogue identity, fitment and final visual verification remain controlled by VINMERGE records, validated sources and human review."
+}
