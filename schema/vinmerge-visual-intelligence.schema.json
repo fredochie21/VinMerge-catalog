@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vinmerge.africa/schema/vinmerge-visual-intelligence.schema.json",
+  "title": "VINMERGE Visual Intelligence Layer",
+  "description": "Hybrid visual architecture for technical diagrams, real product photography, installation/context imagery and AI-assisted visual metadata. Visual data enriches the identifier master but does not override authoritative vehicle or fitment relationships.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["visual_layer_version", "visual_assets", "ai_visual_metadata"],
+  "properties": {
+    "visual_layer_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "visual_assets": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/visualAsset"
+      }
+    },
+    "ai_visual_metadata": {
+      "$ref": "#/$defs/aiVisualMetadata"
+    }
+  },
+  "$defs": {
+    "visualAsset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["asset_id", "asset_type", "role", "source", "status"],
+      "properties": {
+        "asset_id": { "type": "string" },
+        "asset_type": {
+          "type": "string",
+          "enum": [
+            "exploded_diagram",
+            "technical_illustration",
+            "actual_product",
+            "installation_context",
+            "packaging",
+            "vehicle_context",
+            "reference_image"
+          ]
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "identification",
+            "navigation",
+            "purchase_confidence",
+            "installation_guidance",
+            "packaging_verification",
+            "vehicle_context",
+            "reference"
+          ]
+        },
+        "url": { "type": ["string", "null"], "format": "uri" },
+        "thumbnail_url": { "type": ["string", "null"], "format": "uri" },
+        "source": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type"],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "oem_public",
+                "supplier",
+                "dealer",
+                "user_upload",
+                "licensed_catalogue",
+                "ai_generated",
+                "other"
+              ]
+            },
+            "name": { "type": ["string", "null"] },
+            "source_reference": { "type": ["string", "null"] },
+            "license": { "type": ["string", "null"] }
+          }
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending_review", "verified", "rejected", "archived"]
+        },
+        "image_hash": { "type": ["string", "null"] },
+        "dimensions": {
+          "type": ["object", "null"],
+          "additionalProperties": false,
+          "properties": {
+            "width": { "type": "integer", "minimum": 1 },
+            "height": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "visual_tags": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "notes": { "type": ["string", "null"] }
+      }
+    },
+    "aiVisualMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "visual_embedding_ref": { "type": ["string", "null"] },
+        "detected_part_labels": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["label", "confidence"],
+            "properties": {
+              "label": { "type": "string" },
+              "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+            }
+          }
+        },
+        "detected_attributes": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "duplicate_group_id": { "type": ["string", "null"] },
+        "normalization_status": {
+          "type": "string",
+          "enum": ["not_processed", "processed", "needs_review"]
+        },
+        "fitment_signal": {
+          "type": "string",
+          "enum": ["none", "supporting_only", "review_required"]
+        },
+        "human_review_required": { "type": "boolean" }
+      }
+    }
+  }
+}
