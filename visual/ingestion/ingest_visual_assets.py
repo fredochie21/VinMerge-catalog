@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 """Build a VINMERGE visual sidecar from an ingestion manifest.
 
-The script deliberately contains no fitment inference. It validates the
-visual contract, hashes local files when supplied, and groups assets by the
-canonical VINMERGE record identifier.
+No fitment inference is performed. The script validates the visual contract,
+hashes local files when supplied, and groups assets by canonical record ID.
 """
-
 from __future__ import annotations
 
 import argparse
@@ -14,33 +12,9 @@ import json
 from pathlib import Path
 from typing import Any
 
-ASSET_TYPES = {
-    "exploded_diagram",
-    "technical_illustration",
-    "actual_product",
-    "installation_context",
-    "packaging",
-    "vehicle_context",
-    "reference_image",
-}
-ROLES = {
-    "identification",
-    "navigation",
-    "purchase_confidence",
-    "installation_guidance",
-    "packaging_verification",
-    "vehicle_context",
-    "reference",
-}
-SOURCE_TYPES = {
-    "oem_public",
-    "supplier",
-    "dealer",
-    "user_upload",
-    "licensed_catalogue",
-    "ai_generated",
-    "other",
-}
+ASSET_TYPES = {"exploded_diagram", "technical_illustration", "actual_product", "installation_context", "packaging", "vehicle_context", "reference_image"}
+ROLES = {"identification", "navigation", "purchase_confidence", "installation_guidance", "packaging_verification", "vehicle_context", "reference"}
+SOURCE_TYPES = {"oem_public", "supplier", "dealer", "user_upload", "licensed_catalogue", "ai_generated", "other"}
 STATUSES = {"pending_review", "verified", "rejected", "archived"}
 LICENSE_STATUSES = {"unknown", "pending", "permitted", "restricted", "rejected"}
 
@@ -60,7 +34,7 @@ def require_string(obj: dict[str, Any], key: str, context: str) -> str:
     return value.strip()
 
 
-def validate_asset(asset: dict[str, Any], index: int) -> dict[str, Any]:
+def validate_asset(asset: dict[str, Any], index: int) -> tuple[str, dict[str, Any]]:
     context = f"assets[{index}]"
     if not isinstance(asset, dict):
         raise ValueError(f"{context} must be an object")
@@ -70,7 +44,6 @@ def validate_asset(asset: dict[str, Any], index: int) -> dict[str, Any]:
     asset_type = require_string(asset, "asset_type", context)
     role = require_string(asset, "role", context)
     status = require_string(asset, "status", context)
-
     if asset_type not in ASSET_TYPES:
         raise ValueError(f"{context}: unsupported asset_type '{asset_type}'")
     if role not in ROLES:
@@ -84,7 +57,6 @@ def validate_asset(asset: dict[str, Any], index: int) -> dict[str, Any]:
     source_type = require_string(source, "type", f"{context}.source")
     if source_type not in SOURCE_TYPES:
         raise ValueError(f"{context}.source: unsupported type '{source_type}'")
-
     license_status = source.get("license_status", "unknown")
     if license_status not in LICENSE_STATUSES:
         raise ValueError(f"{context}.source: invalid license_status '{license_status}'")
@@ -95,7 +67,6 @@ def validate_asset(asset: dict[str, Any], index: int) -> dict[str, Any]:
         raise ValueError(f"{context}: file_path must be a string when supplied")
     if url is not None and not isinstance(url, str):
         raise ValueError(f"{context}: url must be a string when supplied")
-
     if status == "verified" and not file_path and not url:
         raise ValueError(f"{context}: verified assets require file_path or url")
 
@@ -122,14 +93,12 @@ def validate_asset(asset: dict[str, Any], index: int) -> dict[str, Any]:
         "visual_tags": asset.get("visual_tags", []),
         "notes": asset.get("notes"),
     }
-
     if file_path:
         path = Path(file_path)
         if not path.is_file():
             raise ValueError(f"{context}: file_path does not exist or is not a file: {file_path}")
         output["image_hash"] = sha256_file(path)
         output["file_size_bytes"] = path.stat().st_size
-
     return canonical_record_id, output
 
 
@@ -142,40 +111,31 @@ def build_sidecar(manifest: dict[str, Any]) -> dict[str, Any]:
 
     records: dict[str, dict[str, Any]] = {}
     seen_asset_ids: set[str] = set()
-
     for index, raw_asset in enumerate(assets):
         canonical_record_id, asset = validate_asset(raw_asset, index)
         if asset["asset_id"] in seen_asset_ids:
             raise ValueError(f"duplicate asset_id: {asset['asset_id']}")
         seen_asset_ids.add(asset["asset_id"])
-
-        record = records.setdefault(
-            canonical_record_id,
-            {
-                "canonical_record_id": canonical_record_id,
-                "visual": {
-                    "visual_layer_version": "1.0",
-                    "visual_assets": [],
-                    "ai_visual_metadata": {
-                        "enabled": True,
-                        "visual_embedding_ref": None,
-                        "detected_part_labels": [],
-                        "detected_attributes": [],
-                        "duplicate_group_id": None,
-                        "normalization_status": "not_processed",
-                        "fitment_signal": "none",
-                        "human_review_required": False,
-                    },
+        record = records.setdefault(canonical_record_id, {
+            "canonical_record_id": canonical_record_id,
+            "visual": {
+                "visual_layer_version": "1.0",
+                "visual_assets": [],
+                "ai_visual_metadata": {
+                    "enabled": True,
+                    "visual_embedding_ref": None,
+                    "detected_part_labels": [],
+                    "detected_attributes": [],
+                    "duplicate_group_id": None,
+                    "normalization_status": "not_processed",
+                    "fitment_signal": "none",
+                    "human_review_required": False,
                 },
             },
-        )
+        })
         record["visual"]["visual_assets"].append(asset)
 
-    return {
-        "visual_index_version": "1.0",
-        "description": "VINMERGE visual sidecar generated from an ingestion manifest.",
-        "records": list(records.values()),
-    }
+    return {"visual_index_version": "1.0", "description": "VINMERGE visual sidecar generated from an ingestion manifest.", "records": list(records.values())}
 
 
 def main() -> int:
@@ -183,9 +143,7 @@ def main() -> int:
     parser.add_argument("manifest", type=Path)
     parser.add_argument("output", type=Path)
     args = parser.parse_args()
-
-    manifest = json.loads(args.manifest.read_text(encoding="utf-8"))
-    sidecar = build_sidecar(manifest)
+    sidecar = build_sidecar(json.loads(args.manifest.read_text(encoding="utf-8")))
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(sidecar, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     return 0
