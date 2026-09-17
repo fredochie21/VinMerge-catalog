@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vinmerge.africa/schema/vinmerge-visual-ingestion-manifest.schema.json",
+  "title": "VINMERGE Visual Ingestion Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["manifest_version", "assets"],
+  "properties": {
+    "manifest_version": { "type": "string", "const": "1.0" },
+    "assets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["canonical_record_id", "asset_id", "asset_type", "role", "source", "status"],
+        "properties": {
+          "canonical_record_id": { "type": "string", "minLength": 1 },
+          "asset_id": { "type": "string", "minLength": 1 },
+          "asset_type": { "type": "string" },
+          "role": { "type": "string" },
+          "source": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["type"],
+            "properties": {
+              "type": { "type": "string" },
+              "name": { "type": ["string", "null"] },
+              "source_reference": { "type": ["string", "null"] },
+              "license": { "type": ["string", "null"] },
+              "license_status": { "type": "string" }
+            }
+          },
+          "status": { "type": "string" },
+          "file_path": { "type": ["string", "null"] },
+          "url": { "type": ["string", "null"], "format": "uri-reference" },
+          "thumbnail_url": { "type": ["string", "null"], "format": "uri-reference" },
+          "original_image_ref": { "type": ["string", "null"] },
+          "storage_key": { "type": ["string", "null"] },
+          "mime_type": { "type": ["string", "null"] },
+          "file_size_bytes": { "type": ["integer", "null"], "minimum": 0 },
+          "dimensions": { "type": ["object", "null"] },
+          "image_hash": { "type": ["string", "null"] },
+          "visual_tags": { "type": "array", "items": { "type": "string" } },
+          "notes": { "type": ["string", "null"] }
+        }
+      }
+    }
+  }
+}
