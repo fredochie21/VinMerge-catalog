@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate VINMERGE visual schemas and an optional generated sidecar."""
+"""Validate the generated VINMERGE visual sidecar against its schemas."""
 from __future__ import annotations
 
 import json
@@ -18,7 +18,16 @@ def load(path: Path):
 
 def validate(instance_path: Path, schema_path: Path) -> None:
     schema = load(schema_path)
-    resolver = RefResolver(schema_path.as_uri(), schema)
+    visual_path = SCHEMA_DIR / "vinmerge-visual-intelligence.schema.json"
+    visual_schema = load(visual_path)
+
+    # Register both the repository-local URI and the schema's public $id so
+    # validation never depends on network access or the public host being live.
+    store = {
+        visual_path.as_uri(): visual_schema,
+        visual_schema["$id"]: visual_schema,
+    }
+    resolver = RefResolver(schema_path.as_uri(), schema, store=store)
     validator = Draft202012Validator(schema, resolver=resolver, format_checker=FormatChecker())
     errors = sorted(validator.iter_errors(load(instance_path)), key=lambda e: list(e.path))
     if errors:
