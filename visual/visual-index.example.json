@@ -1,0 +1,23 @@
+{
+  "visual_index_version": "1.0",
+  "description": "Example sidecar index. Production records must reference canonical VINMERGE identifiers; do not duplicate vehicle definitions here.",
+  "records": [
+    {
+      "canonical_record_id": "REPLACE_WITH_VINMERGE_RECORD_ID",
+      "visual": {
+        "visual_layer_version": "1.0",
+        "visual_assets": [],
+        "ai_visual_metadata": {
+          "enabled": true,
+          "visual_embedding_ref": null,
+          "detected_part_labels": [],
+          "detected_attributes": [],
+          "duplicate_group_id": null,
+          "normalization_status": "not_processed",
+          "fitment_signal": "none",
+          "human_review_required": false
+        }
+      }
+    }
+  ]
+}
