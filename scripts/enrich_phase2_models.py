@@ -16,6 +16,35 @@ USER_AGENT = "VinMerge-Catalog-Enrichment/1.0 (research pipeline)"
 WD_SEARCH = "https://www.wikidata.org/w/api.php?action=wbsearchentities&format=json&language=en&uselang=en&limit=5&search="
 WD_ENTITY = "https://www.wikidata.org/w/api.php?action=wbgetentities&format=json&languages=en&props=labels%7Cdescriptions%7Caliases%7Cclaims&ids="
 
+WP_SEARCH = "https://en.wikipedia.org/w/api.php?action=query&list=search&format=json&utf8=1&srnamespace=0&srlimit=5&srsearch="
+WP_SUMMARY = "https://en.wikipedia.org/api/rest_v1/page/summary/"
+
+def search_wikipedia(make, model):
+    q = f"{make} {model}".strip()
+    data = get_json(WP_SEARCH + quote(q), timeout=30)
+    hits = data.get("query", {}).get("search", [])
+    if not hits:
+        return None
+    lm, ll = make.lower(), model.lower()
+    ranked = sorted(hits, key=lambda h: (
+        0 if lm in h.get("title","").lower() else 1,
+        0 if ll in h.get("title","").lower() else 1,
+    ))
+    return ranked[0]
+
+def wikipedia_enrich(make, model):
+    hit = search_wikipedia(make, model)
+    if not hit:
+        return None
+    title = hit.get("title")
+    summary = get_json(WP_SUMMARY + quote(title.replace(" ", "_")), timeout=30)
+    return {
+        "title": title,
+        "description": summary.get("description"),
+        "extract": (summary.get("extract") or "")[:2000],
+        "url": (summary.get("content_urls", {}).get("desktop", {}) or {}).get("page") or f"https://en.wikipedia.org/wiki/{quote(title.replace(' ', '_'))}"
+    }
+
 def get_json(url, timeout=30):
     req = Request(url, headers={"User-Agent": USER_AGENT, "Accept": "application/json"})
     with urlopen(req, timeout=timeout) as r:
@@ -123,6 +152,7 @@ def enrich(rec):
             "country_of_origin": [],
             "platform_or_parent": [],
             "sources": [],
+            "wikipedia": None,
             "review_required": True
         }
     }
@@ -131,7 +161,17 @@ def enrich(rec):
         return base
     try:
         hit, query = search_model(make, model)
-        if not hit:
+        if hit:
+            qid = hit.get("id")
+        else:
+            wp = wikipedia_enrich(make, model)
+            if wp:
+                base["research"].update({
+                    "status": "matched_wikipedia",
+                    "wikipedia": wp,
+                    "sources": [wp["url"]],
+                    "review_required": True
+                })
             return base
         qid = hit.get("id")
         ent = get_json(WD_ENTITY + quote(qid)).get("entities", {}).get(qid, {})
