@@ -59,8 +59,8 @@
   "layer": "phase2_model_research",
   "authoritative_catalog_lfs_sha256": "21a46da56c155f904be93b2062c09a2df2a667b307efd98c16862fe50faf0969",
   "model_records": 825,
-  "matched": 0,
-  "not_found_or_review": 825,
+  "matched": 1,
+  "not_found_or_review": 824,
   "coverage_status": "COMPLETED_FOR_ALL_825_MODEL_RECORDS",
   "method": "multi-slice public-source research pipeline: Wikidata/Wikipedia baseline plus explicit VIN, variant, OEM-parts, VIN-history, cross-reference, regional-relevance and provenance slices; unresolved source evidence remains explicitly review_required",
   "records": [
@@ -38749,7 +38749,7 @@
       },
       "research": {
         "provider": "Wikidata",
-        "status": "research_error",
+        "status": "matched_wikipedia",
         "match_qid": null,
         "match_label": null,
         "match_description": null,
@@ -38757,11 +38757,16 @@
         "manufacturer": [],
         "country_of_origin": [],
         "platform_or_parent": [],
-        "sources": [],
-        "wikipedia": null,
-        "review_required": true,
-        "fallback_error_type": "HTTPError",
-        "error_type": "HTTPError"
+        "sources": [
+          "https://en.wikipedia.org/wiki/Tata_Nano"
+        ],
+        "wikipedia": {
+          "title": "Tata Nano",
+          "description": "Compact city car that was manufactured by Tata Motors",
+          "extract": "The Tata Nano is a city car/microcar manufactured and marketed by Indian automaker Tata Motors from 2008 to 2018. It was primarily sold in India as an inexpensive economy car for motorcycle and scooter riders — with a launch price of ₹100,000 on 10 January 2008. The Nano has a rear-engine, rear-wheel-drive layout and was initially produced as a four-door saloon car with no rear cargo opening, with a five-door hatchback version introduced in 2015.",
+          "url": "https://en.wikipedia.org/wiki/Tata_Nano"
+        },
+        "review_required": true
       }
     },
     {
