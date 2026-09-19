@@ -8,18 +8,37 @@ on:
         required: true
         default: "enrich/phase2-825-final-2026-09-19"
         type: string
+  pull_request_target:
+    types: [edited, opened, reopened, synchronize]
+    branches: [main]
 
 permissions:
   contents: write
 
 jobs:
   enrich-825:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (
+        github.event.pull_request.head.repo.full_name == github.repository &&
+        github.event.pull_request.head.ref == 'enrich/phase2-825-final-2026-09-19'
+      )
     runs-on: ubuntu-latest
     steps:
+      - name: Resolve enrichment ref
+        id: ref
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "ref=${{ inputs.ref }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "ref=${{ github.event.pull_request.head.ref }}" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Checkout requested enrichment branch with LFS
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ steps.ref.outputs.ref }}
           lfs: true
           fetch-depth: 1
 
@@ -62,9 +81,12 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add enrichment/phase2/VINMERGE_825_MODEL_RESEARCH_ENRICHMENT_2026-09-19.json
-          git diff --cached --quiet && echo "No enrichment changes" && exit 0
+          if git diff --cached --quiet; then
+            echo "No enrichment changes"
+            exit 0
+          fi
           git commit -m "feat: generate verified phase 2 enrichment layer"
-          git push origin HEAD:${{ inputs.ref }}
+          git push origin HEAD:${{ steps.ref.outputs.ref }}
 
       - name: Upload enrichment artifact
         uses: actions/upload-artifact@v4
