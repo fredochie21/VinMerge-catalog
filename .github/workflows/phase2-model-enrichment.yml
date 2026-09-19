@@ -1,0 +1,67 @@
+name: VINMERGE Phase 2 Model Enrichment
+
+on:
+  push:
+    branches:
+      - enrich/phase2-all-825-2026-09-19
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  enrich-825:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout authoritative catalog with LFS
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify authoritative LFS payload
+        run: |
+          test -s catalog/VINMERGE_East_Africa_MASTER_CATALOG_825_CUMULATIVE_AI_IMAGE_PUBLIC_ENRICHMENT_2026-09-15.json
+          echo "Catalog SHA256:"
+          sha256sum catalog/VINMERGE_East_Africa_MASTER_CATALOG_825_CUMULATIVE_AI_IMAGE_PUBLIC_ENRICHMENT_2026-09-15.json
+          test "$(sha256sum catalog/VINMERGE_East_Africa_MASTER_CATALOG_825_CUMULATIVE_AI_IMAGE_PUBLIC_ENRICHMENT_2026-09-15.json | cut -d' ' -f1)" = "21a46da56c155f904be93b2062c09a2df2a667b307efd98c16862fe50faf0969"
+
+      - name: Run Phase 2 enrichment across all 825 models
+        run: python scripts/enrich_phase2_models.py
+
+      - name: Validate 825-model coverage
+        run: |
+          python - <<'PY'
+          import json
+          p="enrichment/phase2/VINMERGE_825_MODEL_RESEARCH_ENRICHMENT_2026-09-19.json"
+          d=json.load(open(p,encoding="utf-8"))
+          assert d["model_records"] == 825, d["model_records"]
+          assert d["coverage_status"] == "COMPLETED_FOR_ALL_825_MODEL_RECORDS"
+          ids=[r["canonical_model_id"] for r in d["records"]]
+          assert len(ids)==len(set(ids))==825
+          print("PASS: 825/825 model records covered")
+          print("Matched:", d["matched"])
+          print("Needs review:", d["not_found_or_review"])
+          PY
+
+      - name: Commit enrichment layer
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add enrichment/phase2/VINMERGE_825_MODEL_RESEARCH_ENRICHMENT_2026-09-19.json
+          git commit -m "feat: complete phase 2 model enrichment for all 825 [skip ci]" || echo "No changes to commit"
+          git push origin HEAD:enrich/phase2-all-825-2026-09-19
+
+      - name: Upload enrichment artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vinmerge-phase2-825-model-enrichment
+          path: enrichment/phase2/VINMERGE_825_MODEL_RESEARCH_ENRICHMENT_2026-09-19.json
+          retention-days: 14
+
+# rerun: wikipedia fallback on Wikidata errors
