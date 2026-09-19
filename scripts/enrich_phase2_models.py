@@ -5,10 +5,11 @@ This layer is additive and non-destructive: it never edits the authoritative LFS
 It uses public Wikidata APIs to attach identity/context evidence where a defensible match exists,
 and records an explicit not_found/review status where it does not.
 """
-import json, os, re, sys, time
+import json, os, re, sys, time, random
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from urllib.parse import quote
 from urllib.request import Request, urlopen
+from urllib.error import HTTPError, URLError
 
 CATALOG = "catalog/VINMERGE_East_Africa_MASTER_CATALOG_825_CUMULATIVE_AI_IMAGE_PUBLIC_ENRICHMENT_2026-09-15.json"
 OUT = "enrichment/phase2/VINMERGE_825_MODEL_RESEARCH_ENRICHMENT_2026-09-19.json"
@@ -45,10 +46,27 @@ def wikipedia_enrich(make, model):
         "url": (summary.get("content_urls", {}).get("desktop", {}) or {}).get("page") or f"https://en.wikipedia.org/wiki/{quote(title.replace(' ', '_'))}"
     }
 
-def get_json(url, timeout=30):
-    req = Request(url, headers={"User-Agent": USER_AGENT, "Accept": "application/json"})
-    with urlopen(req, timeout=timeout) as r:
-        return json.loads(r.read().decode("utf-8"))
+def get_json(url, timeout=30, attempts=5):
+    last_error = None
+    for attempt in range(attempts):
+        try:
+            req = Request(url, headers={
+                "User-Agent": USER_AGENT + " (contact: vinmerge research)",
+                "Accept": "application/json",
+                "Accept-Language": "en",
+                "Cache-Control": "no-cache",
+            })
+            with urlopen(req, timeout=timeout) as r:
+                return json.loads(r.read().decode("utf-8"))
+        except (HTTPError, URLError, TimeoutError) as e:
+            last_error = e
+            code = getattr(e, "code", None)
+            if attempt == attempts - 1:
+                raise
+            if code not in (None, 403, 408, 425, 429) and not (500 <= code <= 599):
+                raise
+            time.sleep(min(12, (2 ** attempt) + random.random()))
+    raise last_error
 
 def walk_records(obj):
     found = []
@@ -228,7 +246,7 @@ def main():
     if len(records) != 825:
         print(f"Expected 825 model records; found {len(records)}", file=sys.stderr); sys.exit(3)
     results = [None] * len(records)
-    with ThreadPoolExecutor(max_workers=12) as ex:
+    with ThreadPoolExecutor(max_workers=4) as ex:
         futures = {ex.submit(enrich, r): i for i, r in enumerate(records)}
         for n, fut in enumerate(as_completed(futures), 1):
             i = futures[fut]
@@ -244,7 +262,7 @@ def main():
         "matched": matched,
         "not_found_or_review": len(results)-matched,
         "coverage_status": "COMPLETED_FOR_ALL_825_MODEL_RECORDS",
-        "method": "public Wikidata identity/context enrichment with Wikipedia fallback; unresolved matches remain explicitly review_required",
+        "method": "public Wikidata identity/context enrichment with Wikipedia fallback; resilient retries for transient provider throttling; unresolved matches remain explicitly review_required",
         "records": results
     }
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
