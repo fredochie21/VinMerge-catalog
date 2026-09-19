@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-09-19",
+  "sweep_id": "VINMERGE_825_MODEL_IDENTIFIER_SWEEP_2026-09-19",
+  "baseline_blob_sha": "027b204803eda3ea5555b6ea13590a696e6ce201",
+  "models": 825,
+  "makes": 85,
+  "source_audit_models": 825,
+  "models_with_partial_field_attribution": 825,
+  "output": "enrichment/phase1/VINMERGE_825_IDENTIFIER_SLICES_2026-09-19.json",
+  "status": "COMPLETED_FOR_ALL_825_MODEL_RECORDS"
+}
