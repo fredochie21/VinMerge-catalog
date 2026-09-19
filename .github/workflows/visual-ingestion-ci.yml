@@ -8,8 +8,10 @@ jobs:
   visual-ingestion:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout with Git LFS
         uses: actions/checkout@v4
+        with:
+          lfs: true
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -34,3 +36,16 @@ jobs:
 
       - name: Validate generated visual sidecar
         run: python scripts/validate_visual_layer.py /tmp/visual-index.json
+
+      - name: Export authoritative LFS catalogue for reconciliation
+        run: |
+          test -s catalog/VINMERGE_East_Africa_MASTER_CATALOG_825_CUMULATIVE_AI_IMAGE_PUBLIC_ENRICHMENT_2026-09-15.json
+          sha256sum catalog/VINMERGE_East_Africa_MASTER_CATALOG_825_CUMULATIVE_AI_IMAGE_PUBLIC_ENRICHMENT_2026-09-15.json
+          cp catalog/VINMERGE_East_Africa_MASTER_CATALOG_825_CUMULATIVE_AI_IMAGE_PUBLIC_ENRICHMENT_2026-09-15.json /tmp/VINMERGE_CURRENT_LFS_MASTER.json
+
+      - name: Upload authoritative LFS catalogue
+        uses: actions/upload-artifact@v4
+        with:
+          name: vinmerge-current-lfs-master
+          path: /tmp/VINMERGE_CURRENT_LFS_MASTER.json
+          retention-days: 7

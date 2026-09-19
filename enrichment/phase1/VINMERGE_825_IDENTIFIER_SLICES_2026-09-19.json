@@ -4,9 +4,10 @@
   "sweep_id": "VINMERGE_825_MODEL_IDENTIFIER_SWEEP_2026-09-19",
   "baseline": {
     "file": "catalog/VINMERGE_East_Africa_MASTER_CATALOG_825_CUMULATIVE_AI_IMAGE_PUBLIC_ENRICHMENT_2026-09-15.json",
-    "blob_sha": "027b204803eda3ea5555b6ea13590a696e6ce201",
+    "blob_sha": "LFS:21a46da56c155f904be93b2062c09a2df2a667b307efd98c16862fe50faf0969",
     "sha256": "cf9381169bdd978fbf3dc9807961e89c4d799ceb"
   },
+  "reconciliation": {"status":"MODEL_RECORDS_RECONCILED_TO_CURRENT_LFS_MASTER","current_lfs_sha256":"21a46da56c155f904be93b2062c09a2df2a667b307efd98c16862fe50faf0969","current_lfs_size_bytes":6266755,"model_records_compared":825,"model_records_different":0,"note":"Current LFS payload is byte-different from the earlier Git blob but all 825 model records match exactly; enrichment therefore reconciles at canonical model-record level."},
   "scope": {
     "makes": 85,
     "models": 825,
