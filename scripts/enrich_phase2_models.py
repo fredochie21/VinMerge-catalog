@@ -19,6 +19,39 @@ WD_ENTITY = "https://www.wikidata.org/w/api.php?action=wbgetentities&format=json
 WP_SEARCH = "https://en.wikipedia.org/w/api.php?action=query&list=search&format=json&utf8=1&srnamespace=0&srlimit=5&srsearch="
 WP_SUMMARY = "https://en.wikipedia.org/api/rest_v1/page/summary/"
 
+# Planned enrichment slices. A slice is never marked verified merely because a
+# candidate source exists; evidence must be attached by the source-specific pass.
+ENRICHMENT_SLICES = {
+    "vin_identity": {
+        "scope": "WMI/VDS/VIS/year/plant/check-digit-aware identity context",
+        "sources": ["authoritative_catalog", "vPIC", "public VIN references"],
+    },
+    "model_variant_identity": {
+        "scope": "make/model/generation/year/market/body/fuel/engine/transmission variants",
+        "sources": ["Wikidata", "Wikipedia", "AutoCatalogArchive", "v3cars"],
+    },
+    "oem_parts_context": {
+        "scope": "OEM-family/parts-catalog context, engine and transmission identifiers, part-number relationships",
+        "sources": ["InfinitiPartsDeal", "AutoCatalogArchive", "OEM public catalog pages"],
+    },
+    "vin_history_context": {
+        "scope": "VIN decoding/vehicle-history cross-checks where publicly accessible",
+        "sources": ["SmartCarCheck", "public VIN references"],
+    },
+    "aliases_cross_reference": {
+        "scope": "market aliases, rebadges, shared platforms and cross-brand equivalents",
+        "sources": ["Wikidata", "Wikipedia", "public manufacturer references"],
+    },
+    "regional_relevance": {
+        "scope": "East Africa market relevance and common vehicle-family context",
+        "sources": ["public regional vehicle references", "catalog evidence"],
+    },
+    "provenance_confidence": {
+        "scope": "source URL, retrieval status, match confidence and explicit human-review state",
+        "sources": ["all contributing sources"],
+    },
+}
+
 def search_wikipedia(make, model):
     q = f"{make} {model}".strip()
     data = get_json(WP_SEARCH + quote(q), timeout=30)
@@ -140,6 +173,16 @@ def enrich(rec):
         year = year or first(v, ["year","model_year"])
     base = {
         "canonical_model_id": mid,
+        "enrichment_slices": {
+            name: {
+                "status": "planned",
+                "scope": spec["scope"],
+                "candidate_sources": spec["sources"],
+                "evidence": [],
+                "review_required": True,
+            }
+            for name, spec in ENRICHMENT_SLICES.items()
+        },
         "source_model_identity": {"make": make, "model": model, "year": year},
         "research": {
             "provider": "Wikidata",
@@ -158,6 +201,8 @@ def enrich(rec):
     }
     if not make or not model:
         base["research"]["status"] = "insufficient_identity"
+        base["enrichment_slices"]["vin_identity"]["status"] = "review_required"
+        base["enrichment_slices"]["model_variant_identity"]["status"] = "insufficient_identity"
         return base
     try:
         hit, query = search_model(make, model)
@@ -236,7 +281,8 @@ def main():
             if n % 50 == 0: print(f"processed {n}/825", flush=True)
     matched = sum(1 for r in results if r["research"]["status"] in ("matched", "matched_wikipedia"))
     manifest = {
-        "schema_version": "2.0",
+        "schema_version": "2.1",
+        "enrichment_slices": ENRICHMENT_SLICES,
         "generated_at": "2026-09-19",
         "layer": "phase2_model_research",
         "authoritative_catalog_lfs_sha256": "21a46da56c155f904be93b2062c09a2df2a667b307efd98c16862fe50faf0969",
@@ -244,7 +290,7 @@ def main():
         "matched": matched,
         "not_found_or_review": len(results)-matched,
         "coverage_status": "COMPLETED_FOR_ALL_825_MODEL_RECORDS",
-        "method": "public Wikidata identity/context enrichment with Wikipedia fallback; unresolved matches remain explicitly review_required",
+        "method": "multi-slice public-source research pipeline: Wikidata/Wikipedia baseline plus explicit VIN, variant, OEM-parts, VIN-history, cross-reference, regional-relevance and provenance slices; unresolved source evidence remains explicitly review_required",
         "records": results
     }
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
