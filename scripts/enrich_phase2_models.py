@@ -12,7 +12,7 @@ from urllib.request import Request, urlopen
 
 CATALOG = "catalog/VINMERGE_East_Africa_MASTER_CATALOG_825_CUMULATIVE_AI_IMAGE_PUBLIC_ENRICHMENT_2026-09-15.json"
 OUT = "enrichment/phase2/VINMERGE_825_MODEL_RESEARCH_ENRICHMENT_2026-09-19.json"
-USER_AGENT = "VinMerge-Catalog-Enrichment/1.0 (research pipeline)"
+USER_AGENT = "VinMerge-Catalog-Enrichment/1.1 (+https://github.com/fredochie21/VinMerge-catalog)"
 WD_SEARCH = "https://www.wikidata.org/w/api.php?action=wbsearchentities&format=json&language=en&uselang=en&limit=5&search="
 WD_ENTITY = "https://www.wikidata.org/w/api.php?action=wbgetentities&format=json&languages=en&props=labels%7Cdescriptions%7Caliases%7Cclaims&ids="
 
@@ -79,9 +79,22 @@ def wikipedia_enrich(make, model):
     }
 
 def get_json(url, timeout=30):
-    req = Request(url, headers={"User-Agent": USER_AGENT, "Accept": "application/json"})
-    with urlopen(req, timeout=timeout) as r:
-        return json.loads(r.read().decode("utf-8"))
+    last_error = None
+    for attempt in range(4):
+        try:
+            req = Request(url, headers={
+                "User-Agent": USER_AGENT,
+                "Accept": "application/json",
+                "Accept-Language": "en-US,en;q=0.9",
+                "Cache-Control": "no-cache",
+            })
+            with urlopen(req, timeout=timeout) as r:
+                return json.loads(r.read().decode("utf-8"))
+        except Exception as e:
+            last_error = e
+            if attempt < 3:
+                time.sleep(1.0 * (attempt + 1))
+    raise last_error
 
 def walk_records(obj):
     found = []
@@ -143,7 +156,7 @@ def search_model(make, model):
                     0 if "vehicle" in h.get("description","").lower() or "automobile" in h.get("description","").lower() else 1
                 ))
                 return ranked[0], q
-        except Exception:
+        except Exception as e:
             time.sleep(0.4)
     return None, queries[0] if queries else ""
 
@@ -262,6 +275,7 @@ def enrich(rec):
             base["research"]["fallback_error_type"] = type(wp_error).__name__
         base["research"]["status"] = "research_error"
         base["research"]["error_type"] = type(e).__name__
+        base["research"]["error_detail"] = str(e)[:300]
         return base
 
 def main():
