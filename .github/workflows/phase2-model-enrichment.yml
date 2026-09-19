@@ -63,3 +63,5 @@ jobs:
           name: vinmerge-phase2-825-model-enrichment
           path: enrichment/phase2/VINMERGE_825_MODEL_RESEARCH_ENRICHMENT_2026-09-19.json
           retention-days: 14
+
+# rerun: wikipedia fallback
