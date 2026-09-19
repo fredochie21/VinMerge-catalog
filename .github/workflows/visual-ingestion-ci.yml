@@ -22,7 +22,7 @@ jobs:
         run: python -m pip install --disable-pip-version-check jsonschema
 
       - name: Compile ingestion code
-        run: python -m py_compile visual/ingestion/ingest_visual_assets.py visual/ingestion/test_ingest_visual_assets.py scripts/validate_visual_layer.py
+        run: python -m py_compile visual/ingestion/ingest_visual_assets.py visual/ingestion/test_ingest_visual_assets.py scripts/validate_visual_layer.py scripts/reconcile_lfs_master.py
 
       - name: Run ingestion unit tests
         working-directory: visual/ingestion
@@ -37,7 +37,21 @@ jobs:
       - name: Validate generated visual sidecar
         run: python scripts/validate_visual_layer.py /tmp/visual-index.json
 
-      - name: Export authoritative LFS catalogue for reconciliation
+      - name: Reconcile authoritative LFS master against Phase-1 enrichment
+        run: |
+          python scripts/reconcile_lfs_master.py \
+            catalog/VINMERGE_East_Africa_MASTER_CATALOG_825_CUMULATIVE_AI_IMAGE_PUBLIC_ENRICHMENT_2026-09-15.json \
+            enrichment/phase1/VINMERGE_825_IDENTIFIER_SLICES_2026-09-19.json \
+            /tmp/vinmerge-reconciliation-report.json
+
+      - name: Upload reconciliation report
+        uses: actions/upload-artifact@v4
+        with:
+          name: vinmerge-lfs-reconciliation-report
+          path: /tmp/vinmerge-reconciliation-report.json
+          retention-days: 7
+
+      - name: Export authoritative LFS catalogue
         run: |
           test -s catalog/VINMERGE_East_Africa_MASTER_CATALOG_825_CUMULATIVE_AI_IMAGE_PUBLIC_ENRICHMENT_2026-09-15.json
           sha256sum catalog/VINMERGE_East_Africa_MASTER_CATALOG_825_CUMULATIVE_AI_IMAGE_PUBLIC_ENRICHMENT_2026-09-15.json
