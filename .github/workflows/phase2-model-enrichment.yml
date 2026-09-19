@@ -51,6 +51,8 @@ jobs:
           print("PASS: 825/825 model records covered")
           print("Matched:", d["matched"])
           print("Needs review:", d["not_found_or_review"])
+          if d["not_found_or_review"] != 0:
+              raise SystemExit("STOP: external research coverage is not complete; unresolved records must not be presented as deeply enriched")
           PY
 
       - name: Commit enrichment layer
