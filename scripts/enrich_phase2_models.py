@@ -90,6 +90,19 @@ def enrich(rec):
     make = first(rec, ["make", "make_name", "manufacturer", "brand"])
     model = first(rec, ["model", "model_name", "canonical_model", "name"])
     year = first(rec, ["year", "model_year", "start_year", "production_start_year"])
+    # Recover identity from canonical IDs when the catalog record omits make.
+    if mid and (not make or not model):
+        token = re.sub(r"[^A-Za-z0-9_]+", "_", mid).strip("_")
+        known_multi = ("MERCEDES_BENZ","LAND_ROVER","ALFA_ROMEO","ASTON_MARTIN","ROLLS_ROYCE","GREAT_WALL")
+        up = token.upper()
+        matched_prefix = next((p for p in known_multi if up.startswith(p + "_")), None)
+        if matched_prefix:
+            make = make or matched_prefix.replace("_", " ")
+            model = model or token[len(matched_prefix)+1:].replace("_", " ")
+        else:
+            parts = token.split("_", 1)
+            make = make or parts[0].replace("_", " ")
+            model = model or (parts[1].replace("_", " ") if len(parts) > 1 else "")
     # Some catalogs nest vehicle identity.
     if isinstance(rec.get("vehicle"), dict):
         v = rec["vehicle"]
