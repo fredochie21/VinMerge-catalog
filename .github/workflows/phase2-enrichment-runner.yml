@@ -1,0 +1,74 @@
+name: VINMERGE Phase 2 Enrichment Runner
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Enrichment branch to execute"
+        required: true
+        default: "enrich/phase2-825-final-2026-09-19"
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  enrich-825:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout requested enrichment branch with LFS
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+          lfs: true
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify authoritative LFS payload
+        run: |
+          test -s catalog/VINMERGE_East_Africa_MASTER_CATALOG_825_CUMULATIVE_AI_IMAGE_PUBLIC_ENRICHMENT_2026-09-15.json
+          ACTUAL="$(sha256sum catalog/VINMERGE_East_Africa_MASTER_CATALOG_825_CUMULATIVE_AI_IMAGE_PUBLIC_ENRICHMENT_2026-09-15.json | cut -d' ' -f1)"
+          echo "Catalog SHA256: $ACTUAL"
+          test "$ACTUAL" = "21a46da56c155f904be93b2062c09a2df2a667b307efd98c16862fe50faf0969"
+
+      - name: Run Phase 2 enrichment
+        run: python scripts/enrich_phase2_models.py
+
+      - name: Validate 825-model coverage
+        run: |
+          python - <<'PY'
+          import json
+          p="enrichment/phase2/VINMERGE_825_MODEL_RESEARCH_ENRICHMENT_2026-09-19.json"
+          d=json.load(open(p,encoding="utf-8"))
+          assert d["model_records"] == 825
+          assert d["coverage_status"] == "COMPLETED_FOR_ALL_825_MODEL_RECORDS"
+          ids=[r["canonical_model_id"] for r in d["records"]]
+          assert len(ids)==len(set(ids))==825
+          required={"vin_identity","model_variant_identity","oem_parts_context","vin_history_context","aliases_cross_reference","regional_relevance","provenance_confidence"}
+          assert required.issubset(d["enrichment_slices"])
+          for r in d["records"]:
+              assert required.issubset(r["enrichment_slices"])
+          print("PASS: 825/825 records and all seven slices present")
+          print("Matched:", d["matched"])
+          print("Needs review:", d["not_found_or_review"])
+          PY
+
+      - name: Commit generated enrichment to the enrichment branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add enrichment/phase2/VINMERGE_825_MODEL_RESEARCH_ENRICHMENT_2026-09-19.json
+          git diff --cached --quiet && echo "No enrichment changes" && exit 0
+          git commit -m "feat: generate verified phase 2 enrichment layer"
+          git push origin HEAD:${{ inputs.ref }}
+
+      - name: Upload enrichment artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vinmerge-phase2-825-model-enrichment
+          path: enrichment/phase2/VINMERGE_825_MODEL_RESEARCH_ENRICHMENT_2026-09-19.json
+          retention-days: 14
