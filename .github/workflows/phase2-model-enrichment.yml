@@ -71,7 +71,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add enrichment/phase2/VINMERGE_825_MODEL_RESEARCH_ENRICHMENT_2026-09-19.json
-          git commit -m "feat: refresh phase 2 model enrichment [skip ci]" || echo "No changes to commit"
+          git commit -m "feat: refresh phase 2 model enrichment" || echo "No changes to commit"
           if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref_name }}" = "enrich/phase2-825-final-2026-09-19" ]; then
             git push origin HEAD:enrich/phase2-825-final-2026-09-19
           fi
