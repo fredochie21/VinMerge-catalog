@@ -1,0 +1,62 @@
+name: VINMERGE Phase 2 Model Enrichment
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vinmerge-phase2-enrichment-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-825:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout authoritative catalog with LFS
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+          fetch-depth: 1
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify authoritative LFS payload
+        run: |
+          test -s catalog/VINMERGE_East_Africa_MASTER_CATALOG_825_CUMULATIVE_AI_IMAGE_PUBLIC_ENRICHMENT_2026-09-15.json
+          echo "Catalog SHA256:"
+          sha256sum catalog/VINMERGE_East_Africa_MASTER_CATALOG_825_CUMULATIVE_AI_IMAGE_PUBLIC_ENRICHMENT_2026-09-15.json
+          test "$(sha256sum catalog/VINMERGE_East_Africa_MASTER_CATALOG_825_CUMULATIVE_AI_IMAGE_PUBLIC_ENRICHMENT_2026-09-15.json | cut -d' ' -f1)" = "21a46da56c155f904be93b2062c09a2df2a667b307efd98c16862fe50faf0969"
+      - name: Validate Phase 2 enrichment layer
+        run: |
+          python - <<'PY'
+          import json
+          p="enrichment/phase2/VINMERGE_825_MODEL_RESEARCH_ENRICHMENT_2026-09-19.json"
+          d=json.load(open(p,encoding="utf-8"))
+          assert d["model_records"] == 825, d["model_records"]
+          assert d["coverage_status"] == "COMPLETED_FOR_ALL_825_MODEL_RECORDS"
+          ids=[r["canonical_model_id"] for r in d["records"]]
+          assert len(ids)==len(set(ids))==825
+          required={"vin_identity","model_variant_identity","oem_parts_context","vin_history_context","aliases_cross_reference","regional_relevance","provenance_confidence"}
+          assert required.issubset(d["enrichment_slices"]), sorted(d["enrichment_slices"])
+          for record in d["records"]:
+              assert required.issubset(record["enrichment_slices"])
+          print("PASS: 825/825 model records covered")
+          print("PASS: all planned enrichment slices represented for all 825 records")
+          print("Matched:", d["matched"])
+          print("Needs review:", d["not_found_or_review"])
+          PY
+      - name: Upload enrichment artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vinmerge-phase2-825-model-enrichment
+          path: enrichment/phase2/VINMERGE_825_MODEL_RESEARCH_ENRICHMENT_2026-09-19.json
+          retention-days: 14
+
+# Phase 2 is now validation-only on the final branch. No workflow job writes back to the branch.
