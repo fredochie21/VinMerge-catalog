@@ -200,6 +200,21 @@ def enrich(rec):
         })
         return base
     except Exception as e:
+        # If Wikidata is unavailable/rate-limited, fall back to Wikipedia rather than
+        # leaving a model unresearched.
+        try:
+            wp = wikipedia_enrich(make, model)
+            if wp:
+                base["research"].update({
+                    "status": "matched_wikipedia",
+                    "wikipedia": wp,
+                    "sources": [wp["url"]],
+                    "review_required": True,
+                    "fallback_reason": type(e).__name__
+                })
+                return base
+        except Exception as wp_error:
+            base["research"]["fallback_error_type"] = type(wp_error).__name__
         base["research"]["status"] = "research_error"
         base["research"]["error_type"] = type(e).__name__
         return base
@@ -219,7 +234,7 @@ def main():
             i = futures[fut]
             results[i] = fut.result()
             if n % 50 == 0: print(f"processed {n}/825", flush=True)
-    matched = sum(1 for r in results if r["research"]["status"] == "matched")
+    matched = sum(1 for r in results if r["research"]["status"] in ("matched", "matched_wikipedia"))
     manifest = {
         "schema_version": "2.0",
         "generated_at": "2026-09-19",
@@ -229,7 +244,7 @@ def main():
         "matched": matched,
         "not_found_or_review": len(results)-matched,
         "coverage_status": "COMPLETED_FOR_ALL_825_MODEL_RECORDS",
-        "method": "public Wikidata identity/context enrichment; unresolved matches remain explicitly review_required",
+        "method": "public Wikidata identity/context enrichment with Wikipedia fallback; unresolved matches remain explicitly review_required",
         "records": results
     }
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
