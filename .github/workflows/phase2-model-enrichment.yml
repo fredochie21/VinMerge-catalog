@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - enrich/phase2-all-825-2026-09-19
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize, reopened]
   workflow_dispatch:
 
 permissions:
