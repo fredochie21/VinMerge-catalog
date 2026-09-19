@@ -48,7 +48,20 @@ jobs:
           assert d["coverage_status"] == "COMPLETED_FOR_ALL_825_MODEL_RECORDS"
           ids=[r["canonical_model_id"] for r in d["records"]]
           assert len(ids)==len(set(ids))==825
+          required = {
+              "vin_identity",
+              "model_variant_identity",
+              "oem_parts_context",
+              "vin_history_context",
+              "aliases_cross_reference",
+              "regional_relevance",
+              "provenance_confidence",
+          }
+          assert required.issubset(d["enrichment_slices"]), sorted(d["enrichment_slices"])
+          for record in d["records"]:
+              assert required.issubset(record["enrichment_slices"])
           print("PASS: 825/825 model records covered")
+          print("PASS: all planned enrichment slices represented for all 825 records")
           print("Matched:", d["matched"])
           print("Needs review:", d["not_found_or_review"])
           PY
