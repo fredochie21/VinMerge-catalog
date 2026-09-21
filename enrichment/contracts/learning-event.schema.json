@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "VinMerge Learning Event",
+  "type": "object",
+  "required": ["event_id", "event_type", "occurred_at", "source", "payload", "status"],
+  "properties": {
+    "event_id": {"type": "string", "minLength": 1},
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "vehicle_search",
+        "unresolved_vehicle_search",
+        "fitment_observation",
+        "inventory_observation",
+        "part_observation",
+        "image_observation",
+        "human_correction",
+        "research_update",
+        "verification"
+      ]
+    },
+    "occurred_at": {"type": "string", "format": "date-time"},
+    "source": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {"type": "string"},
+        "system": {"type": ["string", "null"]},
+        "reference": {"type": ["string", "null"]}
+      },
+      "additionalProperties": false
+    },
+    "payload": {
+      "type": "object",
+      "description": "Normalized observation. Raw sensitive inputs should be protected according to DDS privacy rules.",
+      "properties": {
+        "identifier": {"type": ["string", "null"]},
+        "canonical_record_id": {"type": ["string", "null"]},
+        "make": {"type": ["string", "null"]},
+        "model": {"type": ["string", "null"]},
+        "model_year": {"type": ["integer", "null"]},
+        "engine": {"type": ["string", "null"]},
+        "transmission": {"type": ["string", "null"]},
+        "drivetrain": {"type": ["string", "null"]},
+        "market": {"type": ["string", "null"]},
+        "part_number": {"type": ["string", "null"]},
+        "requested_part": {"type": ["string", "null"]},
+        "observations": {"type": "array", "items": {"type": "object"}}
+      },
+      "additionalProperties": true
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type"],
+        "properties": {
+          "type": {"type": "string"},
+          "reference": {"type": ["string", "null"]},
+          "observed_at": {"type": ["string", "null"], "format": "date-time"},
+          "confidence": {"type": ["number", "null"], "minimum": 0, "maximum": 1}
+        },
+        "additionalProperties": true
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["discovered", "research_required", "review_required", "verified", "rejected", "superseded"]
+    }
+  },
+  "additionalProperties": false
+}
