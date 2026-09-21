@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "VinMerge Unresolved Vehicle or Fitment Research Case",
+  "type": "object",
+  "required": ["case_id", "status", "created_at", "trigger"],
+  "properties": {
+    "case_id": {"type": "string", "minLength": 1},
+    "status": {
+      "type": "string",
+      "enum": [
+        "discovered",
+        "researched",
+        "evidence_attached",
+        "review_required",
+        "verified",
+        "published",
+        "rejected",
+        "superseded"
+      ]
+    },
+    "created_at": {"type": "string", "format": "date-time"},
+    "updated_at": {"type": "string", "format": "date-time"},
+    "trigger": {
+      "type": "string",
+      "enum": [
+        "unresolved_vehicle",
+        "unresolved_fitment",
+        "inventory_gap",
+        "human_correction",
+        "new_source"
+      ]
+    },
+    "request": {
+      "type": "object",
+      "properties": {
+        "identifier": {"type": ["string", "null"]},
+        "make": {"type": ["string", "null"]},
+        "model": {"type": ["string", "null"]},
+        "model_year": {"type": ["integer", "null"]},
+        "engine": {"type": ["string", "null"]},
+        "transmission": {"type": ["string", "null"]},
+        "drivetrain": {"type": ["string", "null"]},
+        "market": {"type": ["string", "null"]},
+        "requested_part": {"type": ["string", "null"]},
+        "part_number": {"type": ["string", "null"]}
+      },
+      "additionalProperties": true
+    },
+    "matching_attempts": {
+      "type": "array",
+      "items": {"type": "object"}
+    },
+    "reason": {"type": ["string", "null"]},
+    "candidate_relationships": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "canonical_record_id": {"type": ["string", "null"]},
+          "relationship_type": {"type": ["string", "null"]},
+          "confidence": {"type": ["number", "null"], "minimum": 0, "maximum": 1}
+        },
+        "additionalProperties": true
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {"type": "object"}
+    },
+    "review": {
+      "type": "object",
+      "properties": {
+        "reviewer": {"type": ["string", "null"]},
+        "reviewed_at": {"type": ["string", "null"], "format": "date-time"},
+        "decision": {"type": ["string", "null"]},
+        "notes": {"type": ["string", "null"]}
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}
