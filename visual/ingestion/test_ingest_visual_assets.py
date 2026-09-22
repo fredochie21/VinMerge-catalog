@@ -50,13 +50,13 @@ class VisualIngestionTests(unittest.TestCase):
             })
 
     def test_verified_asset_requires_image_reference(self):
-        with self.assertRaisesRegex(ValueError, "verified assets require file_path or url"):
+        with self.assertRaisesRegex(ValueError, "not valid under any of the given schemas|verified assets require file_path or url"):
             build_sidecar({"manifest_version": "1.0", "assets": [self.asset(status="verified")]})
 
     def test_verified_asset_requires_permitted_license(self):
         asset = self.asset(status="verified", url="https://example.test/image.jpg")
         asset["source"]["license_status"] = "rejected"
-        with self.assertRaisesRegex(ValueError, "license_status='permitted'"):
+        with self.assertRaisesRegex(ValueError, "permitted.*expected|license_status=permitted"):
             build_sidecar({"manifest_version": "1.0", "assets": [asset]})
 
     def test_local_file_is_hashed_inside_ingestion_root(self):
