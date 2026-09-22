@@ -16,21 +16,21 @@
         "properties": {
           "canonical_record_id": { "type": "string", "minLength": 1 },
           "asset_id": { "type": "string", "minLength": 1 },
-          "asset_type": { "type": "string" },
-          "role": { "type": "string" },
+          "asset_type": { "type": "string", "enum": ["exploded_diagram", "technical_illustration", "actual_product", "installation_context", "packaging", "vehicle_context", "reference_image"] },
+          "role": { "type": "string", "enum": ["identification", "navigation", "purchase_confidence", "installation_guidance", "packaging_verification", "vehicle_context", "reference"] },
           "source": {
             "type": "object",
             "additionalProperties": false,
             "required": ["type"],
             "properties": {
-              "type": { "type": "string" },
+              "type": { "type": "string", "enum": ["oem_public", "supplier", "dealer", "user_upload", "licensed_catalogue", "ai_generated", "other"] },
               "name": { "type": ["string", "null"] },
               "source_reference": { "type": ["string", "null"] },
               "license": { "type": ["string", "null"] },
-              "license_status": { "type": "string" }
+              "license_status": { "type": "string", "enum": ["unknown", "pending", "permitted", "restricted", "rejected"] }
             }
           },
-          "status": { "type": "string" },
+          "status": { "type": "string", "enum": ["pending_review", "verified", "rejected", "archived"] },
           "file_path": { "type": ["string", "null"] },
           "url": { "type": ["string", "null"], "format": "uri-reference" },
           "thumbnail_url": { "type": ["string", "null"], "format": "uri-reference" },
@@ -38,11 +38,42 @@
           "storage_key": { "type": ["string", "null"] },
           "mime_type": { "type": ["string", "null"] },
           "file_size_bytes": { "type": ["integer", "null"], "minimum": 0 },
-          "dimensions": { "type": ["object", "null"] },
-          "image_hash": { "type": ["string", "null"] },
+          "dimensions": {
+            "type": ["object", "null"],
+            "additionalProperties": false,
+            "required": ["width", "height"],
+            "properties": {
+              "width": { "type": "integer", "minimum": 1 },
+              "height": { "type": "integer", "minimum": 1 }
+            }
+          },
+          "image_hash": { "type": ["string", "null"], "pattern": "^[A-Fa-f0-9]{64}$" },
           "visual_tags": { "type": "array", "items": { "type": "string" } },
           "notes": { "type": ["string", "null"] }
-        }
+        },
+        "allOf": [
+          {
+            "if": { "properties": { "status": { "const": "verified" } }, "required": ["status"] },
+            "then": {
+              "properties": {
+                "source": {
+                  "properties": {
+                    "license_status": { "const": "permitted" }
+                  },
+                  "required": ["license_status"]
+                }
+              },
+              "anyOf": [
+                { "required": ["file_path"] },
+                { "required": ["url"] }
+              ]
+            }
+          },
+          {
+            "if": { "properties": { "status": { "const": "pending_review" } }, "required": ["status"] },
+            "then": {}
+          }
+        ]
       }
     }
   }
