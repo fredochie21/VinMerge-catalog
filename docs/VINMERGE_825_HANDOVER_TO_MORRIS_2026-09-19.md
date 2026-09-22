@@ -4,8 +4,8 @@ Completed model-by-model Phase 1 enrichment sweep across all 825 baseline models
 
 Canonical baseline remains frozen:
 - `catalog/VINMERGE_East_Africa_MASTER_CATALOG_825_CUMULATIVE_AI_IMAGE_PUBLIC_ENRICHMENT_2026-09-15.json`
-- blob SHA: `027b204803eda3ea5555b6ea13590a696e6ce201`
-- SHA-256: `cf9381169bdd978fbf3dc9807961e89c4d799ceb`
+- Git LFS pointer/blob SHA: `027b204803eda3ea5555b6ea13590a696e6ce201`
+- SHA-256: `21a46da56c155f904be93b2062c09a2df2a667b307efd98c16862fe50faf0969`
 
 Enrichment output:
 - `enrichment/phase1/VINMERGE_825_IDENTIFIER_SLICES_2026-09-19.json`
@@ -17,5 +17,10 @@ Enrichment output:
 Important: this is an additive, versioned evidence layer. Morris should pin the baseline catalog plus this enrichment artifact; the application should not rewrite the LFS master.
 
 Models with populated identifier fields that lack field-level source attribution remain explicitly flagged rather than being falsely attributed. Those records are still usable for routing, but the evidence status remains partial.
+
+Transfer baseline:
+- Use the current repository `main` as the catalogue baseline.
+- Do not use the historical `morris-initial-transfer` branch as the integration baseline.
+- Do not replace or rewrite the Git LFS master catalogue during application transfer.
 
 Payment architecture remains untouched.

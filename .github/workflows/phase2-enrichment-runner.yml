@@ -4,41 +4,33 @@ on:
   workflow_dispatch:
     inputs:
       ref:
-        description: "Enrichment branch to execute"
+        description: "Trusted enrichment branch to inspect"
         required: true
         default: "enrich/phase2-825-final-2026-09-19"
         type: string
-  pull_request_target:
-    types: [edited, opened, reopened, synchronize]
-    branches: [main]
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   enrich-825:
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (
-        github.event.pull_request.head.repo.full_name == github.repository &&
-        github.event.pull_request.head.ref == 'enrich/phase2-825-final-2026-09-19'
-      )
     runs-on: ubuntu-latest
+    env:
+      REQUESTED_REF: ${{ inputs.ref }}
     steps:
-      - name: Resolve enrichment ref
-        id: ref
+      - name: Validate requested enrichment ref
         shell: bash
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "ref=${{ inputs.ref }}" >> "$GITHUB_OUTPUT"
-          else
-            echo "ref=${{ github.event.pull_request.head.ref }}" >> "$GITHUB_OUTPUT"
+          set -euo pipefail
+          if [[ "$REQUESTED_REF" != "enrich/phase2-825-final-2026-09-19" ]]; then
+            echo "Ref is not an approved Phase 2 enrichment branch."
+            exit 1
           fi
 
-      - name: Checkout requested enrichment branch with LFS
+      - name: Checkout approved enrichment branch with LFS
         uses: actions/checkout@v4
         with:
-          ref: ${{ steps.ref.outputs.ref }}
+          ref: enrich/phase2-825-final-2026-09-19
           lfs: true
           fetch-depth: 1
 
@@ -49,6 +41,7 @@ jobs:
 
       - name: Verify authoritative LFS payload
         run: |
+          set -euo pipefail
           test -s catalog/VINMERGE_East_Africa_MASTER_CATALOG_825_CUMULATIVE_AI_IMAGE_PUBLIC_ENRICHMENT_2026-09-15.json
           ACTUAL="$(sha256sum catalog/VINMERGE_East_Africa_MASTER_CATALOG_825_CUMULATIVE_AI_IMAGE_PUBLIC_ENRICHMENT_2026-09-15.json | cut -d' ' -f1)"
           echo "Catalog SHA256: $ACTUAL"
@@ -57,38 +50,62 @@ jobs:
       - name: Run Phase 2 enrichment
         run: python scripts/enrich_phase2_models.py
 
-      - name: Validate 825-model coverage
+      - name: Validate evidence-based 825-model coverage
         run: |
           python - <<'PY'
           import json
-          p="enrichment/phase2/VINMERGE_825_MODEL_RESEARCH_ENRICHMENT_2026-09-19.json"
-          d=json.load(open(p,encoding="utf-8"))
+
+          p = "enrichment/phase2/VINMERGE_825_MODEL_RESEARCH_ENRICHMENT_2026-09-19.json"
+          with open(p, encoding="utf-8") as fh:
+              d = json.load(fh)
+
           assert d["model_records"] == 825
-          assert d["coverage_status"] == "COMPLETED_FOR_ALL_825_MODEL_RECORDS"
-          ids=[r["canonical_model_id"] for r in d["records"]]
-          assert len(ids)==len(set(ids))==825
-          required={"vin_identity","model_variant_identity","oem_parts_context","vin_history_context","aliases_cross_reference","regional_relevance","provenance_confidence"}
+          required = {
+              "vin_identity",
+              "model_variant_identity",
+              "oem_parts_context",
+              "vin_history_context",
+              "aliases_cross_reference",
+              "regional_relevance",
+              "provenance_confidence",
+          }
           assert required.issubset(d["enrichment_slices"])
-          for r in d["records"]:
-              assert required.issubset(r["enrichment_slices"])
-          print("PASS: 825/825 records and all seven slices present")
-          print("Matched:", d["matched"])
-          print("Needs review:", d["not_found_or_review"])
+
+          records = d["records"]
+          assert len(records) == 825
+          ids = [r["canonical_model_id"] for r in records]
+          assert len(ids) == len(set(ids)) == 825
+
+          planned = []
+          errored = []
+          empty_evidence = []
+          review_required = 0
+
+          for record in records:
+              assert required.issubset(record["enrichment_slices"])
+              for slice_name in required:
+                  slice_data = record["enrichment_slices"][slice_name]
+                  status = slice_data.get("status")
+                  evidence = slice_data.get("evidence") or []
+                  if status == "planned":
+                      planned.append((record["canonical_model_id"], slice_name))
+                  if status == "research_error":
+                      errored.append((record["canonical_model_id"], slice_name))
+                  if not evidence:
+                      empty_evidence.append((record["canonical_model_id"], slice_name))
+              if record.get("review_required") is True:
+                  review_required += 1
+
+          assert not planned, f"Unresolved planned slices: {len(planned)}"
+          assert not errored, f"Research-error slices: {len(errored)}"
+          assert not empty_evidence, f"Evidence-empty slices: {len(empty_evidence)}"
+          assert d["coverage_status"] == "COMPLETED_FOR_ALL_825_MODEL_RECORDS"
+
+          print("PASS: 825/825 records have evidence-backed seven-slice enrichment.")
+          print("Review-required records:", review_required)
           PY
 
-      - name: Commit generated enrichment to the enrichment branch
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add enrichment/phase2/VINMERGE_825_MODEL_RESEARCH_ENRICHMENT_2026-09-19.json
-          if git diff --cached --quiet; then
-            echo "No enrichment changes"
-            exit 0
-          fi
-          git commit -m "feat: generate verified phase 2 enrichment layer"
-          git push origin HEAD:${{ steps.ref.outputs.ref }}
-
-      - name: Upload enrichment artifact
+      - name: Upload verified enrichment artifact
         uses: actions/upload-artifact@v4
         with:
           name: vinmerge-phase2-825-model-enrichment
