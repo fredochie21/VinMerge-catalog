@@ -230,6 +230,13 @@ def enrich(rec):
                     "sources": [wp["url"]],
                     "review_required": True
                 })
+                for slice_name in ("model_variant_identity", "aliases_cross_reference", "provenance_confidence"):
+                    base["enrichment_slices"][slice_name]["status"] = "evidence_available_review_required"
+                    base["enrichment_slices"][slice_name]["evidence"].append({
+                        "source": "Wikipedia",
+                        "url": wp["url"],
+                        "retrieved": True
+                    })
             return base
         qid = hit.get("id")
         ent = get_json(WD_ENTITY + quote(qid)).get("entities", {}).get(qid, {})
@@ -280,12 +287,12 @@ def enrich(rec):
                     "fallback_reason": type(e).__name__
                 })
                 for slice_name in ("model_variant_identity", "aliases_cross_reference", "provenance_confidence"):
-                base["enrichment_slices"][slice_name]["status"] = "evidence_available_review_required"
-                base["enrichment_slices"][slice_name]["evidence"].append({
-                    "source": "Wikipedia",
-                    "url": wp["url"],
-                    "retrieved": True
-                })
+                    base["enrichment_slices"][slice_name]["status"] = "evidence_available_review_required"
+                    base["enrichment_slices"][slice_name]["evidence"].append({
+                        "source": "Wikipedia",
+                        "url": wp["url"],
+                        "retrieved": True
+                    })
             return base
         except Exception as wp_error:
             base["research"]["fallback_error_type"] = type(wp_error).__name__
