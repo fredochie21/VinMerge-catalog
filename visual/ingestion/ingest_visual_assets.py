@@ -244,8 +244,7 @@ def write_atomic_json(output: Path, payload: dict[str, Any], *, force: bool = Fa
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as handle:
             json.dump(payload, handle, indent=2, ensure_ascii=False)
-            handle.write("
-")
+            handle.write("\n")
             handle.flush()
             os.fsync(handle.fileno())
         os.replace(temp_name, output)
