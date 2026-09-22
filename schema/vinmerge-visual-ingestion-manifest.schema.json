@@ -64,8 +64,18 @@
                 }
               },
               "anyOf": [
-                { "required": ["file_path"] },
-                { "required": ["url"] }
+                {
+                  "properties": {
+                    "file_path": { "type": "string", "minLength": 1 }
+                  },
+                  "required": ["file_path"]
+                },
+                {
+                  "properties": {
+                    "url": { "type": "string", "minLength": 1, "format": "uri-reference" }
+                  },
+                  "required": ["url"]
+                }
               ]
             }
           },
