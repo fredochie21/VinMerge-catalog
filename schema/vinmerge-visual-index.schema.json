@@ -1,5 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vinmerge.africa/schema/vinmerge-visual-index.schema.json",
   "title": "VINMERGE Visual Index",
   "type": "object",
   "additionalProperties": false,
@@ -15,7 +16,7 @@
         "required": ["canonical_record_id", "visual"],
         "properties": {
           "canonical_record_id": { "type": "string", "minLength": 1 },
-          "visual": { "$ref": "./vinmerge-visual-intelligence.schema.json" }
+          "visual": { "$ref": "https://vinmerge.africa/schema/vinmerge-visual-intelligence.schema.json" }
         }
       }
     }
