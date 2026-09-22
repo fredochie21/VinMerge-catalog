@@ -188,7 +188,7 @@ def enrich(rec):
         "canonical_model_id": mid,
         "enrichment_slices": {
             name: {
-                "status": "planned",
+                "status": "review_required",
                 "scope": spec["scope"],
                 "candidate_sources": spec["sources"],
                 "evidence": [],
@@ -254,8 +254,17 @@ def enrich(rec):
                 f"https://www.wikidata.org/wiki/{qid}",
                 f"https://www.wikidata.org/w/api.php?action=wbsearchentities&search={quote(query)}&language=en&format=json"
             ],
-            "review_required": False
+            "review_required": True
         })
+        evidence_url = "https://www.wikidata.org/wiki/" + qid
+        for slice_name in ("model_variant_identity", "aliases_cross_reference", "provenance_confidence"):
+            base["enrichment_slices"][slice_name]["status"] = "evidence_available_review_required"
+            base["enrichment_slices"][slice_name]["evidence"].append({
+                "source": "Wikidata",
+                "url": evidence_url,
+                "retrieved": True,
+                "match_qid": qid
+            })
         return base
     except Exception as e:
         # If Wikidata is unavailable/rate-limited, fall back to Wikipedia rather than
@@ -270,7 +279,14 @@ def enrich(rec):
                     "review_required": True,
                     "fallback_reason": type(e).__name__
                 })
-                return base
+                for slice_name in ("model_variant_identity", "aliases_cross_reference", "provenance_confidence"):
+                base["enrichment_slices"][slice_name]["status"] = "evidence_available_review_required"
+                base["enrichment_slices"][slice_name]["evidence"].append({
+                    "source": "Wikipedia",
+                    "url": wp["url"],
+                    "retrieved": True
+                })
+            return base
         except Exception as wp_error:
             base["research"]["fallback_error_type"] = type(wp_error).__name__
         base["research"]["status"] = "research_error"
@@ -294,6 +310,13 @@ def main():
             results[i] = fut.result()
             if n % 50 == 0: print(f"processed {n}/825", flush=True)
     matched = sum(1 for r in results if r["research"]["status"] in ("matched", "matched_wikipedia"))
+    fully_evidenced = all(
+        all(
+            s.get("status") == "verified" and bool(s.get("evidence"))
+            for s in r.get("enrichment_slices", {}).values()
+        )
+        for r in results
+    )
     manifest = {
         "schema_version": "2.1",
         "enrichment_slices": ENRICHMENT_SLICES,
@@ -303,7 +326,7 @@ def main():
         "model_records": len(results),
         "matched": matched,
         "not_found_or_review": len(results)-matched,
-        "coverage_status": "COMPLETED_FOR_ALL_825_MODEL_RECORDS",
+        "coverage_status": "COMPLETED_FOR_ALL_825_MODEL_RECORDS" if fully_evidenced else "PARTIAL_EVIDENCE_REQUIRES_REVIEW",
         "method": "multi-slice public-source research pipeline: Wikidata/Wikipedia baseline plus explicit VIN, variant, OEM-parts, VIN-history, cross-reference, regional-relevance and provenance slices; unresolved source evidence remains explicitly review_required",
         "records": results
     }
