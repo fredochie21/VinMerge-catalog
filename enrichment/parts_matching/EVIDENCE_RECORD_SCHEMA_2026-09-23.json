@@ -1,0 +1,68 @@
+{
+  "schema_version": "1.0",
+  "record_type": "vinmerge_parts_matching_evidence",
+  "immutable_fields": [
+    "model_id",
+    "source_url",
+    "source_tier",
+    "captured_at",
+    "source_locator"
+  ],
+  "identity": {
+    "vin_or_chassis_pattern": null,
+    "wmi": null,
+    "chassis_frame_code": null,
+    "manufacturer_model_code": null,
+    "engine_code": null,
+    "transmission_code": null,
+    "model_year_from": null,
+    "model_year_to": null,
+    "plant_code": null,
+    "market": null,
+    "build_date_from": null,
+    "build_date_to": null
+  },
+  "configuration": {
+    "body_style": null,
+    "trim_grade": null,
+    "drivetrain": null,
+    "fuel": null,
+    "displacement_cc": null,
+    "transmission_type": null,
+    "axle": null,
+    "brake_package": null,
+    "suspension_package": null,
+    "option_codes": []
+  },
+  "part": {
+    "category": null,
+    "system": null,
+    "oe_part_number": null,
+    "oe_description": null,
+    "supersedes": [],
+    "superseded_by": [],
+    "manufacturer_numbers": [],
+    "dimensions": {}
+  },
+  "fitment": {
+    "relationship": "UNKNOWN",
+    "scope": "UNKNOWN",
+    "evidence_strength": "UNVERIFIED",
+    "contradiction": false,
+    "notes": null
+  },
+  "provenance": {
+    "source_tier": null,
+    "source_type": null,
+    "publisher": null,
+    "source_url": null,
+    "source_locator": null,
+    "captured_at": null,
+    "evidence_quote_or_structured_fact": null
+  },
+  "review": {
+    "status": "REVIEW_REQUIRED",
+    "reviewer_notes": null,
+    "independent_corroboration_count": 0
+  }
+}
