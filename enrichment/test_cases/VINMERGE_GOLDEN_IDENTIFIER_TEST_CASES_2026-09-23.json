@@ -1,0 +1,89 @@
+{
+  "schema_version": "1.0",
+  "purpose": "VinMerge golden test cases and structured data-collection points for identifier routing, vehicle identification, configuration enrichment, and parts-fitment research.",
+  "authoritative_catalog_change": false,
+  "notes": [
+    "These cases are research/test inputs, not authoritative vehicle or fitment records.",
+    "A 17-character VIN is routed to VIN decoding and validation providers; shorter chassis/frame identifiers are routed to chassis-first regional/OEM research.",
+    "VIN decoder failure on a shorter identifier must not be interpreted as vehicle-not-found.",
+    "Observed dealer/customer outcomes may strengthen evidence but do not automatically become authoritative fitment."
+  ],
+  "test_cases": [
+    {
+      "case_id": "VM-01",
+      "identifier": "SALLAAA138A474049",
+      "identifier_type": "vin",
+      "length": 17,
+      "routing": "vin_decode",
+      "collection_targets": ["vehicle_identity", "exact_configuration", "production_period", "engine", "transmission", "parts_relevant_options", "parts_fitment"],
+      "known_provider_observation": {
+        "provider": "Vincario",
+        "operation": "decode",
+        "status": "decoded",
+        "summary": "Land Rover Discovery, 2008, Series III, 2.7 diesel, engine code 276DT, automatic, 4x4",
+        "review_flags": ["wheel_rim_vs_wheel_size_inconsistency", "engine_torque_label_requires_validation", "door_count_requires_validation", "emission_field_requires_interpretation"]
+      },
+      "data_collection_points": ["VIN-to-configuration corroboration", "exact brake configuration", "OEM part numbers and supersessions", "dealer-supplied successful-fitment records", "customer outcome/return evidence"]
+    },
+    {
+      "case_id": "VM-02",
+      "identifier": "DB42-0031215",
+      "identifier_type": "chassis_frame",
+      "length": 11,
+      "routing": "chassis_first",
+      "standard_vincario_decode": "not_applicable_identifier_too_short",
+      "collection_targets": ["chassis_identity", "market", "model_code", "engine", "transmission", "production_period", "OEM_parts", "fitment"],
+      "data_collection_points": ["regional/JDM chassis databases", "OEM EPC applicability", "dealer VIN/chassis plus part-number submissions", "customer-confirmed vehicle configuration", "successful installation and return outcomes"]
+    },
+    {
+      "case_id": "VM-03",
+      "identifier": "WDD2120542A95813",
+      "identifier_type": "vin",
+      "length": 17,
+      "routing": "vin_decode",
+      "collection_targets": ["vehicle_identity", "exact_configuration", "production_date", "engine", "transmission", "market", "option/build data", "parts_fitment"]
+    },
+    {
+      "case_id": "VM-04",
+      "identifier": "FJA300-4057096",
+      "identifier_type": "chassis_frame",
+      "length": 13,
+      "routing": "chassis_first",
+      "standard_vincario_decode": "not_applicable_identifier_too_short",
+      "collection_targets": ["chassis_identity", "market", "model_code", "engine", "transmission", "production_period", "OEM_parts", "fitment"],
+      "data_collection_points": ["regional/JDM chassis databases", "OEM EPC applicability", "dealer VIN/chassis plus part-number submissions", "customer-confirmed vehicle configuration", "successful installation and return outcomes"]
+    },
+    {
+      "case_id": "VM-05",
+      "identifier": "WVIZZZ2HZEAO12141",
+      "identifier_type": "vin",
+      "length": 17,
+      "routing": "vin_decode",
+      "collection_targets": ["vehicle_identity", "exact_configuration", "production_date", "engine", "transmission", "market", "option/build data", "parts_fitment"]
+    }
+  ],
+  "learning_event_fields_to_capture": [
+    "case_id",
+    "identifier",
+    "identifier_type",
+    "source",
+    "captured_at",
+    "vehicle_claim",
+    "vehicle_configuration_claim",
+    "part_number",
+    "part_brand",
+    "dealer_id",
+    "inventory_record_id",
+    "customer_search_id",
+    "order_id",
+    "installation_outcome",
+    "return_reason",
+    "evidence_source",
+    "evidence_url",
+    "evidence_tier",
+    "confidence",
+    "contradiction",
+    "review_status",
+    "promoted_to_fitment_master"
+  ]
+}
