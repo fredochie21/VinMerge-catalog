@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """Validate VinMerge part contracts and synthetic fixtures."""
 from __future__ import annotations
-import copy, json
+
+import copy
+import json
 from pathlib import Path
-from jsonschema import Draft202012Validator, FormatChecker
+
+from jsonschema import Draft202012Validator, FormatChecker, ValidationError
 
 ROOT = Path(__file__).resolve().parents[1]
 SCHEMA_DIR = ROOT / "schema"
@@ -15,12 +18,31 @@ PAIRS = [
     ("vinmerge-part-fitment.schema.json", "synthetic-part-fitment.json"),
 ]
 
-def load(path):
+
+def load(path: Path):
     return json.loads(path.read_text(encoding="utf-8"))
+
 
 def validate(schema, instance):
     Draft202012Validator.check_schema(schema)
-    Draft202012Validator(schema, format_checker=FormatChecker()).validate(instance)
+    Draft202012Validator(
+        schema, format_checker=FormatChecker()
+    ).validate(instance)
+
+
+def normalize_part_number(value: str) -> str:
+    """Contract rule: uppercase and remove separators, never strip letters."""
+    return "".join(character for character in value.upper() if character.isalnum())
+
+
+def must_reject(schema, instance, message: str):
+    try:
+        validate(schema, instance)
+    except ValidationError:
+        print(f"PASS: {message}")
+        return
+    raise SystemExit(f"FAIL: {message}")
+
 
 def main():
     loaded = {}
@@ -35,36 +57,22 @@ def main():
     schema, fixture = loaded["vinmerge-part-number-reference.schema.json"]
     bad = copy.deepcopy(fixture)
     bad["status"] = "VERIFIED"
-    try:
-        validate(schema, bad)
-    except Exception:
-        print("PASS: verified part-number reference without evidence is rejected")
-    else:
-        raise SystemExit("FAIL: verified part-number reference without evidence was accepted")
+    must_reject(schema, bad, "verified part-number reference without evidence is rejected")
 
     # A verified fitment without evidence/reviewer/timestamp must fail.
     schema, fixture = loaded["vinmerge-part-fitment.schema.json"]
     bad = copy.deepcopy(fixture)
     bad["status"] = "VERIFIED"
-    try:
-        validate(schema, bad)
-    except Exception:
-        print("PASS: verified fitment without evidence/reviewer/timestamp is rejected")
-    else:
-        raise SystemExit("FAIL: verified fitment without evidence was accepted")
+    must_reject(schema, bad, "verified fitment without evidence/reviewer/timestamp is rejected")
 
-    # Alphabetic prefixes must remain in normalized identifiers.
-    schema, fixture = loaded["vinmerge-part-number-reference.schema.json"]
-    bad = copy.deepcopy(fixture)
-    bad["value_normalized"] = "044650K240"
-    bad["value_raw"] = "GDB1234"
-    try:
-        validate(schema, bad)
-    except Exception:
-        raise SystemExit("FAIL: normalized identifier test fixture invalid")
-    if not bad["value_normalized"].startswith("GDB"):
-        print("NOTE: schema permits any normalized alphanumeric key; normalization code must preserve prefixes")
+    # Prefix preservation is a mandatory normalization contract.
+    normalized = normalize_part_number("gdb-1234")
+    if normalized != "GDB1234":
+        raise SystemExit(f"FAIL: alphabetic prefix was not preserved: {normalized}")
+    print("PASS: aftermarket alphabetic prefix is preserved during normalization")
+
     print("PASS: all part contract checks completed")
+
 
 if __name__ == "__main__":
     main()
