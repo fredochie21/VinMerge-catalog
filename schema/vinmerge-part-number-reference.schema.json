@@ -1,0 +1,187 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vinmerge.africa/schema/vinmerge-part-number-reference.schema.json",
+  "title": "VinMerge Part Number Reference",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "reference_id",
+    "canonical_part_id",
+    "identifier_type",
+    "relationship",
+    "value_raw",
+    "value_normalized",
+    "status",
+    "evidence"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "reference_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "canonical_part_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "identifier_type": {
+      "enum": [
+        "OEM",
+        "AFTERMARKET",
+        "MANUFACTURER",
+        "SUPPLIER",
+        "DISTRIBUTOR",
+        "DEALER_SKU",
+        "LEGACY",
+        "OTHER"
+      ]
+    },
+    "relationship": {
+      "enum": [
+        "PRIMARY",
+        "EQUIVALENT",
+        "SUPERSEDES",
+        "SUPERSEDED_BY",
+        "ALTERNATIVE",
+        "UNVERIFIED_CANDIDATE"
+      ]
+    },
+    "value_raw": {
+      "type": "string",
+      "minLength": 1
+    },
+    "value_normalized": {
+      "type": "string",
+      "pattern": "^[A-Z0-9]+$"
+    },
+    "issuer": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "market_codes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "valid_from": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date"
+    },
+    "valid_to": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date"
+    },
+    "status": {
+      "enum": [
+        "PENDING_REVIEW",
+        "VERIFIED",
+        "REJECTED",
+        "ARCHIVED"
+      ]
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source_type",
+          "source_reference",
+          "collected_at"
+        ],
+        "properties": {
+          "source_type": {
+            "type": "string"
+          },
+          "source_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "source_reference": {
+            "type": "string",
+            "minLength": 1
+          },
+          "collected_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "VERIFIED"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "evidence": {
+            "minItems": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "identifier_type": {
+            "enum": [
+              "OEM",
+              "AFTERMARKET",
+              "MANUFACTURER",
+              "SUPPLIER",
+              "DISTRIBUTOR"
+            ]
+          }
+        },
+        "required": [
+          "identifier_type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "issuer": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ]
+}

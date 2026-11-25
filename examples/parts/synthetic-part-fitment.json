@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0.0",
+  "fitment_id": "VM-FIT-SYN-000001",
+  "canonical_part_id": "VM-PART-SYN-000001",
+  "vehicle_ref": "VM-VEHICLE-SYN-000001",
+  "vehicle_ref_type": "VINMERGE_VEHICLE_PROFILE",
+  "fitment_level": "EXACT_CONFIGURATION",
+  "status": "PENDING_REVIEW",
+  "market_codes": [
+    "KE"
+  ],
+  "constraints": {
+    "engine_codes": [],
+    "transmission_codes": [],
+    "chassis_codes": [],
+    "trim_codes": [],
+    "model_year_from": null,
+    "model_year_to": null
+  },
+  "evidence": [],
+  "created_at": "2026-11-25T00:00:00Z",
+  "updated_at": "2026-11-25T00:00:00Z"
+}

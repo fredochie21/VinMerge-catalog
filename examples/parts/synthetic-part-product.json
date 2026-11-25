@@ -1,0 +1,37 @@
+{
+  "schema_version": "1.0.0",
+  "canonical_part_id": "VM-PART-SYN-000001",
+  "record_status": "DRAFT",
+  "category_code": "BRAKES.PADS",
+  "subcategory_code": "FRONT",
+  "component_name": "Front brake pad set",
+  "manufacturer": {
+    "name": "Synthetic manufacturer example",
+    "manufacturer_id": null
+  },
+  "product_family": null,
+  "descriptions": [
+    {
+      "locale": "en",
+      "text": "Synthetic test fixture only; not a verified production product."
+    }
+  ],
+  "attributes": [
+    {
+      "attribute_code": "position",
+      "value": "front",
+      "unit": null
+    }
+  ],
+  "provenance": [
+    {
+      "source_type": "SYNTHETIC_TEST",
+      "source_name": "VinMerge contract test",
+      "source_reference": "fixture:parts-product-001",
+      "collected_at": "2026-11-25T00:00:00Z",
+      "notes": "Not a real catalogue assertion."
+    }
+  ],
+  "created_at": "2026-11-25T00:00:00Z",
+  "updated_at": "2026-11-25T00:00:00Z"
+}

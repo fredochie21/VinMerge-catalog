@@ -1,0 +1,190 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vinmerge.africa/schema/vinmerge-part-fitment.schema.json",
+  "title": "VinMerge Part-to-Vehicle Fitment",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "fitment_id",
+    "canonical_part_id",
+    "vehicle_ref",
+    "vehicle_ref_type",
+    "fitment_level",
+    "status",
+    "constraints",
+    "evidence"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "fitment_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "canonical_part_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "vehicle_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "vehicle_ref_type": {
+      "enum": [
+        "VINMERGE_VEHICLE_PROFILE",
+        "CANONICAL_MODEL_ID",
+        "CHASSIS_CONFIGURATION"
+      ]
+    },
+    "fitment_level": {
+      "enum": [
+        "EXACT_CONFIGURATION",
+        "EXACT_CHASSIS",
+        "EXACT_ENGINE",
+        "VALIDATED_EQUIVALENT",
+        "CROSS_BRAND_ALTERNATIVE",
+        "GENERATION_CONFIRMED",
+        "MODEL_CONFIRMED",
+        "CONDITIONAL",
+        "UNCERTAIN"
+      ]
+    },
+    "status": {
+      "enum": [
+        "PENDING_REVIEW",
+        "VERIFIED",
+        "REJECTED"
+      ]
+    },
+    "market_codes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "engine_codes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "transmission_codes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "chassis_codes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "trim_codes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "model_year_from": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1900
+        },
+        "model_year_to": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1900
+        }
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source_type",
+          "source_reference",
+          "collected_at"
+        ],
+        "properties": {
+          "source_type": {
+            "type": "string"
+          },
+          "source_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "source_reference": {
+            "type": "string",
+            "minLength": 1
+          },
+          "collected_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "verified_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "verified_by": {
+      "type": "string",
+      "minLength": 1
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "VERIFIED"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "required": [
+          "verified_at",
+          "verified_by"
+        ],
+        "properties": {
+          "evidence": {
+            "minItems": 1
+          }
+        }
+      }
+    }
+  ]
+}

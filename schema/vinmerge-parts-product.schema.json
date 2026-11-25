@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vinmerge.africa/schema/vinmerge-parts-product.schema.json",
+  "title": "VinMerge Canonical Parts Product",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "canonical_part_id",
+    "record_status",
+    "category_code",
+    "component_name",
+    "provenance",
+    "created_at",
+    "updated_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "canonical_part_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "record_status": {
+      "enum": [
+        "DRAFT",
+        "ACTIVE",
+        "DEPRECATED",
+        "ARCHIVED"
+      ]
+    },
+    "category_code": {
+      "type": "string",
+      "minLength": 1
+    },
+    "subcategory_code": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "component_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "manufacturer": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "manufacturer_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "product_family": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "descriptions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "locale",
+          "text"
+        ],
+        "properties": {
+          "locale": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "attributes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "attribute_code",
+          "value"
+        ],
+        "properties": {
+          "attribute_code": {
+            "type": "string"
+          },
+          "value": {},
+          "unit": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "provenance": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source_type",
+          "source_name",
+          "source_reference",
+          "collected_at"
+        ],
+        "properties": {
+          "source_type": {
+            "enum": [
+              "MANUFACTURER",
+              "OEM_CATALOGUE",
+              "LICENSED_CATALOGUE",
+              "SUPPLIER",
+              "DEALER",
+              "RESEARCH",
+              "SYNTHETIC_TEST",
+              "OTHER"
+            ]
+          },
+          "source_name": {
+            "type": "string"
+          },
+          "source_reference": {
+            "type": "string",
+            "minLength": 1
+          },
+          "collected_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}
