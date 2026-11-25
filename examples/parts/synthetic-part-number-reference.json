@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0.0",
+  "reference_id": "VM-REF-SYN-000001",
+  "canonical_part_id": "VM-PART-SYN-000001",
+  "identifier_type": "OEM",
+  "relationship": "PRIMARY",
+  "value_raw": "SYN-04465-0K240",
+  "value_normalized": "SYN044650K240",
+  "issuer": "Synthetic manufacturer example",
+  "market_codes": [
+    "KE"
+  ],
+  "valid_from": null,
+  "valid_to": null,
+  "status": "PENDING_REVIEW",
+  "evidence": [],
+  "created_at": "2026-11-25T00:00:00Z",
+  "updated_at": "2026-11-25T00:00:00Z"
+}
